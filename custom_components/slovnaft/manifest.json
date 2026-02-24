@@ -1,0 +1,12 @@
+{
+  "domain": "slovnaft",
+  "name": "Sused Slovnaft",
+  "codeowners": ["@07spider70"],
+  "config_flow": true,
+  "dependencies": [],
+  "documentation": "https://github.com/07spider70/ha-sused-slovnaft",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/07spider70/ha-sused-slovnaft/issues",
+  "requirements": [],
+  "version": "1.0.0"
+}
