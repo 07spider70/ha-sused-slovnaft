@@ -18,7 +18,8 @@
       "cannot_connect": "Failed to connect to the Slovnaft API."
     },
     "abort": {
-      "single_instance_allowed": "Only a single configuration of Sused Slovnaft is allowed."
+      "single_instance_allowed": "Only a single configuration of Sused Slovnaft is allowed.",
+      "reconfigure_successful": "Reconfiguration was successful!"
     }
   },
   "entity": {
@@ -43,7 +44,8 @@
       "pres": { "name": "Pressure" },
       "humi": { "name": "Humidity" },
       "wind_speed": { "name": "Wind Speed" },
-      "wind_direction_name": { "name": "Wind Direction" }
+      "wind_direction_name": { "name": "Wind Direction" },
+      "calendar_notes": { "name": "Refinery Notes" }
     },
     "binary_sensor": {
       "fire": { "name": "Flaring Today" },

@@ -1,4 +1,6 @@
 """The Sused Slovnaft integration."""
+import logging
+
 from dataclasses import dataclass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -9,6 +11,8 @@ from .const import DOMAIN
 from .coordinator import SlovnaftEnvUpdateCoordinator, SlovnaftCalendarUpdateCoordinator
 
 PLATFORMS = ["sensor", "binary_sensor", "calendar"]
+
+_LOGGER = logging.getLogger(__name__)
 
 @dataclass
 class SlovnaftData:
@@ -28,11 +32,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlovnaftConfigEntry) -> 
 
     if entry.data.get("enable_env", True):
         env_interval = entry.data.get("env_interval", 10) * 60
+        _LOGGER.debug(f"Setting up env update coordinator with interval {env_interval} seconds")
         env_coord = SlovnaftEnvUpdateCoordinator(hass, client, env_interval, entry)
         await env_coord.async_config_entry_first_refresh()
 
     if entry.data.get("enable_calendar", True):
         cal_interval = entry.data.get("calendar_interval", 12) * 3600
+        _LOGGER.debug(f"Setting up calendar update coordinator with interval {cal_interval} seconds")
         cal_coord = SlovnaftCalendarUpdateCoordinator(hass, client, cal_interval, entry)
         await cal_coord.async_config_entry_first_refresh()
 

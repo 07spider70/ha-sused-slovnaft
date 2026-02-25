@@ -42,11 +42,11 @@ class SlovnaftCalendarSensor(CoordinatorEntity, BinarySensorEntity):
 
     @property
     def is_on(self) -> bool:
-        if not self.coordinator.data:
+        if not self.coordinator.data or not self.coordinator.data.days:
             return False
 
         today = datetime.datetime.now().date()
-        for timestamp, day_status in self.coordinator.data.items():
+        for timestamp, day_status in self.coordinator.data.days.items():
             if datetime.datetime.fromtimestamp(timestamp).date() == today:
                 return getattr(day_status, self.sensor_key, False)
         return False

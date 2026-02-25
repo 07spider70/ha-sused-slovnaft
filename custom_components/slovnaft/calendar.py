@@ -44,10 +44,11 @@ class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
             return None
 
         today = datetime.datetime.now().date()
-        for timestamp in sorted(self.coordinator.data.keys()):
+        calendar_days = self.coordinator.data.days
+        for timestamp in sorted(calendar_days.keys()):
             dt = datetime.datetime.fromtimestamp(timestamp).date()
             if dt >= today:
-                status = self.coordinator.data[timestamp]
+                status = calendar_days[timestamp]
                 event = self._generate_ha_event(dt, status)
                 if event:
                     return event
@@ -67,7 +68,8 @@ class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
                     events.append(event)
         return events
 
-    def _generate_ha_event(self, event_date: datetime.date, status: CalendarDayStatus) -> CalendarEvent | None:
+    @staticmethod
+    def _generate_ha_event(event_date: datetime.date, status: CalendarDayStatus) -> CalendarEvent | None:
         """Helper to convert a DayStatus into a Home Assistant CalendarEvent."""
         active_flags = []
         if status.fire: active_flags.append("Flaring")

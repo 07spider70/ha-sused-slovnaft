@@ -12,19 +12,26 @@ from .models import StationAirQuality
 PARALLEL_UPDATES = 0
 
 async def async_setup_entry(hass: HomeAssistant, entry: SlovnaftConfigEntry, async_add_entities: AddEntitiesCallback) -> None:
-    if not entry.runtime_data.env_coordinator:
-        return
-
-    coordinator = entry.runtime_data.env_coordinator
-    user_stations = entry.data.get("stations", [])
     entities = []
 
-    for station_id, station_name in STATIONS.items():
-        if station_id in user_stations:
-            for sensor_key, sensor_info in SENSOR_TYPES.items():
-                entities.append(SlovnaftAirQualitySensor(coordinator, station_id, station_name, sensor_key, sensor_info))
+    # 1. Set up Environment Sensors (if API is enabled)
+    if entry.runtime_data.env_coordinator:
+        coordinator = entry.runtime_data.env_coordinator
+        user_stations = entry.data.get("stations", [])
 
-    async_add_entities(entities)
+        for station_id, station_name in STATIONS.items():
+            if station_id in user_stations:
+                for sensor_key, sensor_info in SENSOR_TYPES.items():
+                    entities.append(SlovnaftAirQualitySensor(coordinator, station_id, station_name, sensor_key, sensor_info))
+
+    # 2. Set up Calendar Notes Sensor (if API is enabled)
+    if entry.runtime_data.calendar_coordinator:
+        entities.append(SlovnaftCalendarNoteSensor(entry.runtime_data.calendar_coordinator))
+
+    # 3. Add all collected entities to Home Assistant at once
+    if entities:
+        async_add_entities(entities)
+
 
 class SlovnaftAirQualitySensor(CoordinatorEntity, SensorEntity):
     _attr_has_entity_name = True
@@ -57,3 +64,39 @@ class SlovnaftAirQualitySensor(CoordinatorEntity, SensorEntity):
         station = stations_data.get(self.station_id)
         if station: return getattr(station, self.sensor_key, None)
         return None
+
+
+class SlovnaftCalendarNoteSensor(CoordinatorEntity, SensorEntity):
+    _attr_has_entity_name = True
+    _attr_icon = "mdi:note-text"
+
+    def __init__(self, coordinator: Any) -> None:
+        super().__init__(coordinator)
+        self._attr_unique_id = f"{DOMAIN}_calendar_notes"
+        self.translation_key = "calendar_notes"
+
+    @property
+    def device_info(self) -> Dict[str, Any]:
+        return {
+            "identifiers": {(DOMAIN, "calendar")},
+            "name": "Slovnaft Calendar Events",
+            "manufacturer": "Slovnaft",
+        }
+
+    @property
+    def native_value(self) -> str | None:
+        """The main state must be under 255 chars."""
+        if not self.coordinator.data:
+            return None
+        return "Available" if self.coordinator.data.this_month_note else "No Notes"
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Expose the massive text blocks as attributes!"""
+        if not self.coordinator.data:
+            return {}
+        return {
+            "last_month_note": self.coordinator.data.last_month_note,
+            "this_month_note": self.coordinator.data.this_month_note,
+            "next_month_note": self.coordinator.data.next_month_note,
+        }
