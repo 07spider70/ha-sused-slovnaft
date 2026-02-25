@@ -1,0 +1,60 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Nastavenie Sused Slovnaft",
+        "description": "Vyberte, ktoré API chcete povoliť a nastavte intervaly dopytovania.",
+        "data": {
+          "enable_env": "Povoliť údaje o kvalite ovzdušia",
+          "env_interval": "Interval aktualizácie ovzdušia (minúty)",
+          "enable_calendar": "Povoliť údaje z kalendára",
+          "calendar_interval": "Interval aktualizácie kalendára (hodiny)",
+          "stations": "Monitorovacie stanice na sledovanie"
+        }
+      }
+    },
+    "error": {
+      "no_api_selected": "Musíte povoliť aspoň jedno API (Kvalita ovzdušia alebo Kalendár).",
+      "cannot_connect": "Nepodarilo sa spojiť s API Slovnaft."
+    },
+    "abort": {
+      "single_instance_allowed": "Povolená je len jedna konfigurácia integrácie Sused Slovnaft."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pm10": { "name": "PM10" },
+      "pm25": { "name": "PM2.5" },
+      "so2": { "name": "SO2 (Oxid siričitý)" },
+      "no": { "name": "NO (Oxid dusnatý)" },
+      "no2": { "name": "NO2 (Oxid dusičitý)" },
+      "nox": { "name": "NOx (Oxidy dusíka)" },
+      "o3": { "name": "O3 (Ozón)" },
+      "co": { "name": "CO (Oxid uhoľnatý)" },
+      "ch4": { "name": "CH4 (Metán)" },
+      "nmhc": { "name": "NMHC (Nemetánové uhľovodíky)" },
+      "thc": { "name": "THC (Celkové uhľovodíky)" },
+      "c6h6": { "name": "C6H6 (Benzén)" },
+      "c7h8": { "name": "C7H8 (Toluén)" },
+      "c8h0": { "name": "C8H10 (Xylény)" },
+      "c4h6": { "name": "1,3-Butadién" },
+      "h2s": { "name": "H2S (Sirovodík)" },
+      "temp": { "name": "Teplota" },
+      "pres": { "name": "Tlak" },
+      "humi": { "name": "Vlhkosť" },
+      "wind_speed": { "name": "Rýchlosť vetra" },
+      "wind_direction_name": { "name": "Smer vetra" }
+    },
+    "binary_sensor": {
+      "fire": { "name": "Spaľovanie na poľných horákoch" },
+      "smell": { "name": "Zápach" },
+      "noise": { "name": "Hluk" },
+      "water": { "name": "Aktivita na vode" },
+      "smoke": { "name": "Dym" },
+      "work": { "name": "Údržbové práce" }
+    },
+    "calendar": {
+      "calendar_view": { "name": "Kalendár udalostí" }
+    }
+  }
+}
