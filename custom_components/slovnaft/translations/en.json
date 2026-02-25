@@ -11,6 +11,17 @@
           "calendar_interval": "Calendar Update Interval (hours)",
           "stations": "Monitoring Stations to track"
         }
+      },
+      "reconfigure": {
+        "title": "Configure Sused Slovnaft",
+        "description": "Choose which APIs to enable and set your polling intervals.",
+        "data": {
+          "enable_env": "Enable Air Quality Data",
+          "env_interval": "Air Quality Update Interval (minutes)",
+          "enable_calendar": "Enable Calendar Data",
+          "calendar_interval": "Calendar Update Interval (hours)",
+          "stations": "Monitoring Stations to track"
+        }
       }
     },
     "error": {

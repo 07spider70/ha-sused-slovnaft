@@ -11,6 +11,17 @@
           "calendar_interval": "Interval aktualizácie kalendára (hodiny)",
           "stations": "Monitorovacie stanice na sledovanie"
         }
+      },
+      "reconfigure": {
+        "title": "Nastavenie Sused Slovnaft",
+        "description": "Vyberte, ktoré API chcete povoliť a nastavte intervaly dopytovania.",
+        "data": {
+          "enable_env": "Povoliť údaje o kvalite ovzdušia",
+          "env_interval": "Interval aktualizácie ovzdušia (minúty)",
+          "enable_calendar": "Povoliť údaje z kalendára",
+          "calendar_interval": "Interval aktualizácie kalendára (hodiny)",
+          "stations": "Monitorovacie stanice na sledovanie"
+        }
       }
     },
     "error": {
