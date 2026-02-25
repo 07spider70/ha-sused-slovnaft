@@ -1,6 +1,6 @@
 """Data models for the Sused Slovnaft integration."""
 from dataclasses import dataclass
-from typing import Optional
+from typing import Optional, Dict
 
 @dataclass
 class CalendarDayStatus:
@@ -11,6 +11,13 @@ class CalendarDayStatus:
     water: bool
     smoke: bool
     work: bool
+
+@dataclass
+class CalendarData:
+    days: Dict[int, CalendarDayStatus]
+    last_month_note: Optional[str]
+    this_month_note: Optional[str]
+    next_month_note: Optional[str]
 
 @dataclass
 class StationAirQuality:

@@ -18,7 +18,8 @@
       "cannot_connect": "Nepodarilo sa spojiť s API Slovnaft."
     },
     "abort": {
-      "single_instance_allowed": "Povolená je len jedna konfigurácia integrácie Sused Slovnaft."
+      "single_instance_allowed": "Povolená je len jedna konfigurácia integrácie Sused Slovnaft.",
+      "reconfigure_successful": "Rekonfigurácia prebehla úspešne!"
     }
   },
   "entity": {
@@ -43,7 +44,8 @@
       "pres": { "name": "Tlak" },
       "humi": { "name": "Vlhkosť" },
       "wind_speed": { "name": "Rýchlosť vetra" },
-      "wind_direction_name": { "name": "Smer vetra" }
+      "wind_direction_name": { "name": "Smer vetra" },
+      "calendar_notes": { "name": "Poznámky k prevádzke" }
     },
     "binary_sensor": {
       "fire": { "name": "Spaľovanie na poľných horákoch" },
