@@ -1,7 +1,7 @@
 # Sused Slovnaft for Home Assistant
 
-[![GitHub Release](https://img.shields.io/github/v/release/07spider70/ha-sused-slovnaft?style=for-the-badge)](https://github.com/07spider70/ha-sused-slovnaft/releases)
 [![HACS Valid](https://img.shields.io/badge/HACS-Custom-orange.svg?style=for-the-badge)](https://github.com/hacs/integration)
+[![GitHub Release](https://img.shields.io/github/v/release/07spider70/ha-sused-slovnaft?style=for-the-badge)](https://github.com/07spider70/ha-sused-slovnaft/releases)
 [![Tests](https://img.shields.io/github/actions/workflow/status/07spider70/ha-sused-slovnaft/tests.yml?style=for-the-badge)](https://github.com/07spider70/ha-sused-slovnaft/actions)
 
 Oficiálna Home Assistant integrácia pre transparentné sledovanie kvality ovzdušia a plánovaných aktivít rafinérie Slovnaft v Bratislave (Rovinka, Vlčie hrdlo, Podunajské Biskupice).
@@ -17,6 +17,7 @@ A custom Home Assistant integration to track air quality and planned refinery ac
 ## Installation
 
 ### Method 1: HACS (Recommended)
+[![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=07spider70&repository=ha-sused-slovnaft&category=integration)
 1. Open HACS in your Home Assistant instance.
 2. Click the `⋮` menu in the top right and select **Custom repositories**.
 3. Add `https://github.com/07spider70/ha-sused-slovnaft` and select **Integration** as the category.
