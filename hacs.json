@@ -1,5 +1,5 @@
 {
   "name": "Sused Slovnaft",
-  "render_readme": true,
-  "hacs": "1.19.0"
+  "homeassistant": "2025.12.3",
+  "hacs": "2.0.5"
 }
