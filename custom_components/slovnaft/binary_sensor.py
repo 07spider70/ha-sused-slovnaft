@@ -1,8 +1,9 @@
 """Binary sensor platform for the Sused Slovnaft Calendar."""
 import datetime
 from typing import Any, Dict
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.components.binary_sensor import BinarySensorEntity
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -22,6 +23,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlovnaftConfigEntry, asy
 
     async_add_entities(entities)
 
+
 class SlovnaftCalendarSensor(CoordinatorEntity, BinarySensorEntity):
     _attr_has_entity_name = True
 
@@ -31,6 +33,22 @@ class SlovnaftCalendarSensor(CoordinatorEntity, BinarySensorEntity):
         self._attr_unique_id = f"{DOMAIN}_calendar_{sensor_key}"
         self.translation_key = sensor_key
         self._attr_icon = sensor_info["icon"]
+
+    async def async_added_to_hass(self) -> None:
+        """Run when entity is added to Home Assistant."""
+        await super().async_added_to_hass()
+
+        @callback
+        def _update_state(_now):
+            """Force a UI redraw without hitting the API."""
+            self.async_write_ha_state()
+
+        # Schedule the UI to redraw exactly at 00:00:01 every single day
+        self.async_on_remove(
+            async_track_time_change(
+                self.hass, _update_state, hour=0, minute=0, second=1
+            )
+        )
 
     @property
     def device_info(self) -> Dict[str, Any]:
