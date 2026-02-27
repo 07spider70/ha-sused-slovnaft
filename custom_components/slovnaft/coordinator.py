@@ -29,7 +29,6 @@ class SlovnaftEnvUpdateCoordinator(DataUpdateCoordinator[Dict[str, StationAirQua
             _LOGGER.debug("Updating StationAirQuality data")
             return await self.client.get_environment()
         except SlovnaftApiError as err:
-            _LOGGER.exception("Failed to update environment data: %s", err)
             raise UpdateFailed(f"Environment API error: {err}") from err
 
 class SlovnaftCalendarUpdateCoordinator(DataUpdateCoordinator[Dict[int, CalendarDayStatus]]):
@@ -48,5 +47,4 @@ class SlovnaftCalendarUpdateCoordinator(DataUpdateCoordinator[Dict[int, Calendar
             _LOGGER.debug("Updating Calendar data")
             return await self.client.get_calendar()
         except SlovnaftApiError as err:
-            _LOGGER.exception("Failed to update calendar data: %s", err)
             raise UpdateFailed(f"Calendar API error: {err}") from err

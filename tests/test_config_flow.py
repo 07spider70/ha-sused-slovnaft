@@ -97,12 +97,12 @@ async def test_reconfigure_flow_success(hass):
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"enable_env": True, "env_interval": 5, "enable_calendar": True, "calendar_interval": 12, "stations": ["116", "117"]},
+            {"enable_env": True, "env_interval": 45, "enable_calendar": True, "calendar_interval": 12, "stations": ["116", "117"]},
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == "abort"
     assert result2["reason"] == "reconfigure_successful"
-    assert entry.data["env_interval"] == 5
+    assert entry.data["env_interval"] == 45
     assert entry.data["stations"] == ["116", "117"]
     assert mock_reload.call_count == 1
