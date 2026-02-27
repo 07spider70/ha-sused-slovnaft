@@ -69,5 +69,16 @@
     "calendar": {
       "calendar_view": { "name": "Kalendár udalostí" }
     }
+  },
+    "selector": {
+    "calendar_interval": {
+      "options": {
+        "12": "12 hodín",
+        "24": "1 deň",
+        "72": "3 dni",
+        "168": "1 týždeň",
+        "336": "2 týždne"
+      }
+    }
   }
 }

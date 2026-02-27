@@ -7,13 +7,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import SlovnaftApiClient, SlovnaftApiError
 from .const import DOMAIN, STATIONS
-from .const import ENV_ENDPOINT_DEFAULT_INTERVAL_MIN, ENV_ENDPOINT_MIN_INTERVAL_MIN, ENV_ENDPOINT_MAX_INTERVAL_MIN, CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS, CALENDAR_ENDPOINT_MIN_INTERVAL_HOURS, CALENDAR_ENDPOINT_MAX_INTERVAL_HOURS
+from .const import ENV_ENDPOINT_DEFAULT_INTERVAL_MIN, ENV_ENDPOINT_MIN_INTERVAL_MIN, ENV_ENDPOINT_MAX_INTERVAL_MIN, CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS
 
 _LOGGER = logging.getLogger(__name__)
 
 class SlovnaftConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Sused Slovnaft."""
-    VERSION = 1
+    VERSION = 2
 
     async def async_step_user(self, user_input=None):
         """Handle the initial configuration step."""
@@ -54,9 +54,13 @@ class SlovnaftConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 vol.All(vol.Coerce(int), vol.Range(min=ENV_ENDPOINT_MIN_INTERVAL_MIN,
                                                    max=ENV_ENDPOINT_MAX_INTERVAL_MIN)),
             vol.Required("enable_calendar", default=True): bool,
-            vol.Required("calendar_interval", default=CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS):
-                vol.All(vol.Coerce(int), vol.Range(min=CALENDAR_ENDPOINT_MIN_INTERVAL_HOURS,
-                                                   max=CALENDAR_ENDPOINT_MAX_INTERVAL_HOURS)),
+            vol.Required("calendar_interval", default=str(CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS)):
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=["12", "24", "48", "72", "168", "336"],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="calendar_interval"
+                    )),
             vol.Required("stations", default=list(STATIONS.keys())): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=station_options, multiple=True, mode=selector.SelectSelectorMode.DROPDOWN,
@@ -108,10 +112,13 @@ class SlovnaftConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         vol.Range(min=ENV_ENDPOINT_MIN_INTERVAL_MIN,
                             max=ENV_ENDPOINT_MAX_INTERVAL_MIN)),
             vol.Required("enable_calendar", default=entry.data.get("enable_calendar", True)): bool,
-            vol.Required("calendar_interval", default=entry.data.get("calendar_interval", CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS)):
-                vol.All(vol.Coerce(int),
-                    vol.Range(min=CALENDAR_ENDPOINT_MIN_INTERVAL_HOURS,
-                        max=CALENDAR_ENDPOINT_MAX_INTERVAL_HOURS)),
+            vol.Required("calendar_interval", default=str(entry.data.get("calendar_interval", CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS))):
+                selector.SelectSelector(
+                    selector.SelectSelectorConfig(
+                        options=["12", "24", "48", "72", "168", "336"],
+                        mode=selector.SelectSelectorMode.DROPDOWN,
+                        translation_key="calendar_interval"
+                    )),
             vol.Required("stations",
                          default=entry.data.get("stations", list(STATIONS.keys()))): selector.SelectSelector(
                 selector.SelectSelectorConfig(
