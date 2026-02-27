@@ -8,7 +8,6 @@ from datetime import datetime
 from typing import Any, Dict, Optional
 
 import aiohttp
-import async_timeout
 
 from .const import CALENDAR_ENDPOINT, ENV_ENDPOINT
 from .models import CalendarDayStatus, StationAirQuality, CalendarData
@@ -32,20 +31,17 @@ class SlovnaftApiClient:
 
     async def _api_wrapper(self, method: str, url: str, data: dict = None, headers: dict = None) -> Any:
         try:
-            async with async_timeout.timeout(self._timeout):
+            async with asyncio.timeout(self._timeout):
                 response = await self._session.request(method=method, url=url, data=data, headers=headers)
                 response.raise_for_status()
                 json_data = await response.json()
                 _LOGGER.debug("Received response from %s: %s bytes", url, len(str(json_data)))
                 return json_data
         except asyncio.TimeoutError as err:
-            _LOGGER.exception("Timeout fetching data from %s", url)
             raise SlovnaftConnectionError(f"Timeout connecting to {url}") from err
         except (aiohttp.ClientError, socket.gaierror) as err:
-            _LOGGER.exception("Connection error fetching data from %s: %s", url, err)
             raise SlovnaftConnectionError(f"Error connecting to {url}: {err}") from err
         except Exception as err:
-            _LOGGER.exception("Error fetching data from %s: %s", url, err)
             raise SlovnaftApiError(f"Unexpected error from {url}: {err}") from err
 
     async def get_calendar(self) -> CalendarData:
@@ -92,7 +88,6 @@ class SlovnaftApiClient:
                 next_month_note=_clean_html(raw_data.get("nextMonthNote")),
             )
         except (KeyError, TypeError, ValueError) as err:
-            _LOGGER.exception("Failed to parse calendar data")
             raise SlovnaftDataError(f"Failed to parse calendar data: {err}") from err
 
     async def get_environment(self) -> Dict[str, StationAirQuality]:
@@ -155,5 +150,4 @@ class SlovnaftApiClient:
             _LOGGER.debug("Successfully parsed environment data for %s stations", len(stations))
             return stations
         except (KeyError, TypeError, ValueError) as err:
-            _LOGGER.exception("Failed to parse environment data")
             raise SlovnaftDataError(f"Failed to parse environment: {err}") from err

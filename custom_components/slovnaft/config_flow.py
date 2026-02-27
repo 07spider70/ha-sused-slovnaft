@@ -7,6 +7,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import SlovnaftApiClient, SlovnaftApiError
 from .const import DOMAIN, STATIONS
+from .const import ENV_ENDPOINT_DEFAULT_INTERVAL_MIN, ENV_ENDPOINT_MIN_INTERVAL_MIN, ENV_ENDPOINT_MAX_INTERVAL_MIN, CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS, CALENDAR_ENDPOINT_MIN_INTERVAL_HOURS, CALENDAR_ENDPOINT_MAX_INTERVAL_HOURS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,9 +50,13 @@ class SlovnaftConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         data_schema = vol.Schema({
             vol.Required("enable_env", default=True): bool,
-            vol.Required("env_interval", default=60): vol.All(vol.Coerce(int), vol.Range(min=1, max=1440)),
+            vol.Required("env_interval", default=ENV_ENDPOINT_DEFAULT_INTERVAL_MIN):
+                vol.All(vol.Coerce(int), vol.Range(min=ENV_ENDPOINT_MIN_INTERVAL_MIN,
+                                                   max=ENV_ENDPOINT_MAX_INTERVAL_MIN)),
             vol.Required("enable_calendar", default=True): bool,
-            vol.Required("calendar_interval", default=12): vol.All(vol.Coerce(int), vol.Range(min=1, max=168)),
+            vol.Required("calendar_interval", default=CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS):
+                vol.All(vol.Coerce(int), vol.Range(min=CALENDAR_ENDPOINT_MIN_INTERVAL_HOURS,
+                                                   max=CALENDAR_ENDPOINT_MAX_INTERVAL_HOURS)),
             vol.Required("stations", default=list(STATIONS.keys())): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=station_options, multiple=True, mode=selector.SelectSelectorMode.DROPDOWN,
@@ -59,7 +64,7 @@ class SlovnaftConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             ),
         })
 
-        return self.async_show_form(step_id="user", data_schema=data_schema, errors=errors)
+        return self.async_show_form(step_id="user",data_schema=data_schema, errors=errors)
 
     async def async_step_reconfigure(self, user_input=None):
         """Handle the reconfiguration of the integration."""
@@ -96,13 +101,15 @@ class SlovnaftConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         # Use the existing entry.data to set the default values so the user sees their current settings!
         data_schema = vol.Schema({
             vol.Required("enable_env", default=entry.data.get("enable_env", True)): bool,
-            vol.Required("env_interval", default=entry.data.get("env_interval", 10)): vol.All(vol.Coerce(int),
-                                                                                              vol.Range(min=1,
-                                                                                                        max=1440)),
+            vol.Required("env_interval", default=entry.data.get("env_interval", ENV_ENDPOINT_DEFAULT_INTERVAL_MIN)):
+                vol.All(vol.Coerce(int),
+                        vol.Range(min=ENV_ENDPOINT_MIN_INTERVAL_MIN,
+                            max=ENV_ENDPOINT_MAX_INTERVAL_MIN)),
             vol.Required("enable_calendar", default=entry.data.get("enable_calendar", True)): bool,
-            vol.Required("calendar_interval", default=entry.data.get("calendar_interval", 12)): vol.All(vol.Coerce(int),
-                                                                                                        vol.Range(min=1,
-                                                                                                                  max=168)),
+            vol.Required("calendar_interval", default=entry.data.get("calendar_interval", CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS)):
+                vol.All(vol.Coerce(int),
+                    vol.Range(min=CALENDAR_ENDPOINT_MIN_INTERVAL_HOURS,
+                        max=CALENDAR_ENDPOINT_MAX_INTERVAL_HOURS)),
             vol.Required("stations",
                          default=entry.data.get("stations", list(STATIONS.keys()))): selector.SelectSelector(
                 selector.SelectSelectorConfig(

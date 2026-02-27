@@ -8,6 +8,8 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .api import SlovnaftApiClient
 from .const import DOMAIN
+from .const import ENV_ENDPOINT_DEFAULT_INTERVAL_MIN, CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS
+
 from .coordinator import SlovnaftEnvUpdateCoordinator, SlovnaftCalendarUpdateCoordinator
 
 PLATFORMS = ["sensor", "binary_sensor", "calendar"]
@@ -31,13 +33,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlovnaftConfigEntry) -> 
     cal_coord = None
 
     if entry.data.get("enable_env", True):
-        env_interval = entry.data.get("env_interval", 10) * 60
+        env_interval = entry.data.get("env_interval", ENV_ENDPOINT_DEFAULT_INTERVAL_MIN) * 60
         _LOGGER.debug(f"Setting up env update coordinator with interval {env_interval} seconds")
         env_coord = SlovnaftEnvUpdateCoordinator(hass, client, env_interval, entry)
         await env_coord.async_config_entry_first_refresh()
 
     if entry.data.get("enable_calendar", True):
-        cal_interval = entry.data.get("calendar_interval", 12) * 3600
+        cal_interval = entry.data.get("calendar_interval", CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS) * 3600
         _LOGGER.debug(f"Setting up calendar update coordinator with interval {cal_interval} seconds")
         cal_coord = SlovnaftCalendarUpdateCoordinator(hass, client, cal_interval, entry)
         await cal_coord.async_config_entry_first_refresh()
