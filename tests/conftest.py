@@ -20,7 +20,7 @@ def mock_config_entry():
             "enable_env": True,
             "env_interval": 10,
             "enable_calendar": True,
-            "calendar_interval": 12,
+            "calendar_interval": "12",
             "stations": ["116"],
         },
         entry_id="test_entry_123",

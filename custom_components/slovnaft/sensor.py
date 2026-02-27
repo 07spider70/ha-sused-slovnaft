@@ -2,6 +2,7 @@
 from typing import Any, Dict, Optional
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -44,25 +45,28 @@ class SlovnaftAirQualitySensor(CoordinatorEntity, SensorEntity):
 
         self._attr_unique_id = f"{DOMAIN}_{station_id}_{sensor_key}"
         self.translation_key = sensor_key
-        self._attr_native_unit_of_measurement = sensor_info["unit"]
-        self._attr_icon = sensor_info["icon"]
-        self._attr_device_class = sensor_info["device_class"]
-        self._attr_state_class = SensorStateClass.MEASUREMENT if sensor_info["unit"] else None
+
+        self._attr_native_unit_of_measurement = sensor_info.get("unit")
+        self._attr_icon = sensor_info.get("icon")
+        self._attr_device_class = sensor_info.get("device_class")
+        self._attr_state_class = SensorStateClass.MEASUREMENT if self._attr_native_unit_of_measurement else None
 
     @property
-    def device_info(self) -> Dict[str, Any]:
-        return {
-            "identifiers": {(DOMAIN, self.station_id)},
-            "name": f"Slovnaft Station - {self.station_name}",
-            "manufacturer": "Slovnaft",
-        }
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, self.station_id)},
+            name=f"Slovnaft Station - {self.station_name}",
+            manufacturer="Slovnaft",
+        )
 
     @property
     def native_value(self) -> Optional[Any]:
         stations_data: Dict[str, StationAirQuality] = self.coordinator.data
-        if not stations_data: return None
+        if not stations_data:
+            return None
         station = stations_data.get(self.station_id)
-        if station: return getattr(station, self.sensor_key, None)
+        if station:
+            return getattr(station, self.sensor_key, None)
         return None
 
 
@@ -76,12 +80,12 @@ class SlovnaftCalendarNoteSensor(CoordinatorEntity, SensorEntity):
         self.translation_key = "calendar_notes"
 
     @property
-    def device_info(self) -> Dict[str, Any]:
-        return {
-            "identifiers": {(DOMAIN, "calendar")},
-            "name": "Slovnaft Calendar Events",
-            "manufacturer": "Slovnaft",
-        }
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, "calendar")},
+            name="Slovnaft Calendar Events",
+            manufacturer="Slovnaft",
+        )
 
     @property
     def native_value(self) -> str | None:

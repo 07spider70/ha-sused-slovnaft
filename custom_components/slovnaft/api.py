@@ -4,11 +4,10 @@ import html
 import asyncio
 import logging
 import socket
-from datetime import datetime
 from typing import Any, Dict, Optional
 
 import aiohttp
-import async_timeout
+import homeassistant.util.dt as dt_util
 
 from .const import CALENDAR_ENDPOINT, ENV_ENDPOINT
 from .models import CalendarDayStatus, StationAirQuality, CalendarData
@@ -16,13 +15,16 @@ from .models import CalendarDayStatus, StationAirQuality, CalendarData
 _LOGGER = logging.getLogger(__name__)
 
 
-class SlovnaftApiError(Exception): pass
+class SlovnaftApiError(Exception):
+    pass
 
 
-class SlovnaftConnectionError(SlovnaftApiError): pass
+class SlovnaftConnectionError(SlovnaftApiError):
+    pass
 
 
-class SlovnaftDataError(SlovnaftApiError): pass
+class SlovnaftDataError(SlovnaftApiError):
+    pass
 
 
 class SlovnaftApiClient:
@@ -32,31 +34,29 @@ class SlovnaftApiClient:
 
     async def _api_wrapper(self, method: str, url: str, data: dict = None, headers: dict = None) -> Any:
         try:
-            async with async_timeout.timeout(self._timeout):
+            async with asyncio.timeout(self._timeout):
                 response = await self._session.request(method=method, url=url, data=data, headers=headers)
                 response.raise_for_status()
                 json_data = await response.json()
                 _LOGGER.debug("Received response from %s: %s bytes", url, len(str(json_data)))
                 return json_data
         except asyncio.TimeoutError as err:
-            _LOGGER.exception("Timeout fetching data from %s", url)
             raise SlovnaftConnectionError(f"Timeout connecting to {url}") from err
         except (aiohttp.ClientError, socket.gaierror) as err:
-            _LOGGER.exception("Connection error fetching data from %s: %s", url, err)
             raise SlovnaftConnectionError(f"Error connecting to {url}: {err}") from err
         except Exception as err:
-            _LOGGER.exception("Error fetching data from %s: %s", url, err)
             raise SlovnaftApiError(f"Unexpected error from {url}: {err}") from err
 
     async def get_calendar(self) -> CalendarData:
-        now = datetime.now()
+        now = dt_util.now()
         _LOGGER.debug("Fetching calendar data for %d-%02d", now.year, now.month)
         url = f"{CALENDAR_ENDPOINT}/{now.year}-{now.month}"
         raw_data = await self._api_wrapper("GET", url, headers={"Accept": "application/json"})
 
         def _clean_html(raw_html: Optional[str]) -> Optional[str]:
             """Helper to strip HTML tags and unescape characters."""
-            if not raw_html: return None
+            if not raw_html:
+                return None
             # Replace breaks/paragraphs with newlines
             text = raw_html.replace("</p>", "\n").replace("<br>", "\n").replace("<br/>", "\n")
             # Remove all remaining HTML tags
@@ -92,7 +92,6 @@ class SlovnaftApiClient:
                 next_month_note=_clean_html(raw_data.get("nextMonthNote")),
             )
         except (KeyError, TypeError, ValueError) as err:
-            _LOGGER.exception("Failed to parse calendar data")
             raise SlovnaftDataError(f"Failed to parse calendar data: {err}") from err
 
     async def get_environment(self) -> Dict[str, StationAirQuality]:
@@ -107,7 +106,8 @@ class SlovnaftApiClient:
             stations = {}
 
             def _parse_float(val: Any) -> Optional[float]:
-                if val is None or val == "": return None
+                if val is None or val == "":
+                    return None
                 try:
                     return float(val)
                 except ValueError:
@@ -115,7 +115,8 @@ class SlovnaftApiClient:
 
             for env in raw_data.get("environment", []):
                 site_id = str(env.get("site_number"))
-                if not site_id: continue
+                if not site_id:
+                    continue
 
                 stations[site_id] = StationAirQuality(
                     site_number=site_id,
@@ -150,10 +151,11 @@ class SlovnaftApiClient:
                 site_id = str(wind.get("station"))
                 if site_id in stations:
                     stations[site_id].wind_direction_name = wind.get("direction")
-                    if wind.get("speed"): stations[site_id].wind_speed = _parse_float(wind.get("speed"))
-                    if wind.get("degrees"): stations[site_id].wind_degrees = _parse_float(wind.get("degrees"))
+                    if wind.get("speed"):
+                        stations[site_id].wind_speed = _parse_float(wind.get("speed"))
+                    if wind.get("degrees"):
+                        stations[site_id].wind_degrees = _parse_float(wind.get("degrees"))
             _LOGGER.debug("Successfully parsed environment data for %s stations", len(stations))
             return stations
         except (KeyError, TypeError, ValueError) as err:
-            _LOGGER.exception("Failed to parse environment data")
             raise SlovnaftDataError(f"Failed to parse environment: {err}") from err

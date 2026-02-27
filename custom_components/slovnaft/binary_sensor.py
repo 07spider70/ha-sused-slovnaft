@@ -1,11 +1,14 @@
 """Binary sensor platform for the Sused Slovnaft Calendar."""
 import datetime
 from typing import Any, Dict
-from homeassistant.helpers.event import async_track_time_change
+
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.event import async_track_time_change
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+import homeassistant.util.dt as dt_util
 
 from . import SlovnaftConfigEntry
 from .const import DOMAIN, BINARY_SENSOR_TYPES
@@ -32,7 +35,7 @@ class SlovnaftCalendarSensor(CoordinatorEntity, BinarySensorEntity):
         self.sensor_key = sensor_key
         self._attr_unique_id = f"{DOMAIN}_calendar_{sensor_key}"
         self.translation_key = sensor_key
-        self._attr_icon = sensor_info["icon"]
+        self._attr_icon = sensor_info.get("icon")
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
@@ -51,20 +54,21 @@ class SlovnaftCalendarSensor(CoordinatorEntity, BinarySensorEntity):
         )
 
     @property
-    def device_info(self) -> Dict[str, Any]:
-        return {
-            "identifiers": {(DOMAIN, "calendar")},
-            "name": "Slovnaft Calendar Events",
-            "manufacturer": "Slovnaft",
-        }
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, "calendar")},
+            name="Slovnaft Calendar Events",
+            manufacturer="Slovnaft",
+        )
 
     @property
     def is_on(self) -> bool:
         if not self.coordinator.data or not self.coordinator.data.days:
             return False
 
-        today = datetime.datetime.now().date()
+        today = dt_util.now().date()
         for timestamp, day_status in self.coordinator.data.days.items():
-            if datetime.datetime.fromtimestamp(timestamp).date() == today:
+            dt = dt_util.as_local(datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)).date()
+            if dt == today:
                 return getattr(day_status, self.sensor_key, False)
         return False
