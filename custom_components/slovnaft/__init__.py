@@ -38,7 +38,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlovnaftConfigEntry) -> 
         await env_coord.async_config_entry_first_refresh()
 
     if entry.data.get("enable_calendar", True):
-        cal_interval = entry.data.get("calendar_interval", CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS) * 3600
+        cal_interval = int(entry.data.get("calendar_interval", CALENDAR_ENDPOINT_DEFAULT_INTERVAL_HOURS)) * 3600
         _LOGGER.debug(f"Setting up calendar update coordinator with interval {cal_interval} seconds")
         cal_coord = SlovnaftCalendarUpdateCoordinator(hass, client, cal_interval, entry)
         await cal_coord.async_config_entry_first_refresh()
