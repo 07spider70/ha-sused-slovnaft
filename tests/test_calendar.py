@@ -1,7 +1,6 @@
 from datetime import datetime
 from custom_components.slovnaft.models import CalendarDayStatus
 
-
 def test_binary_sensor_today_logic():
     """Verify logic that picks today's date from the dataset."""
     today_ts = int(datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
