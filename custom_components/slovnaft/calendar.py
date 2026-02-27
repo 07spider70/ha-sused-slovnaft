@@ -96,12 +96,18 @@ class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
     def _generate_ha_event(event_date: datetime.date, status: CalendarDayStatus) -> CalendarEvent | None:
         """Helper to convert a DayStatus into a Home Assistant CalendarEvent."""
         active_flags = []
-        if status.fire: active_flags.append("Flaring")
-        if status.smell: active_flags.append("Odor")
-        if status.noise: active_flags.append("Noise")
-        if status.smoke: active_flags.append("Smoke")
-        if status.water: active_flags.append("Water Activity")
-        if status.work: active_flags.append("Maintenance")
+        if status.fire:
+            active_flags.append("Flaring")
+        if status.smell:
+            active_flags.append("Odor")
+        if status.noise:
+            active_flags.append("Noise")
+        if status.smoke:
+            active_flags.append("Smoke")
+        if status.water:
+            active_flags.append("Water Activity")
+        if status.work:
+            active_flags.append("Maintenance")
 
         if not active_flags:
             return None

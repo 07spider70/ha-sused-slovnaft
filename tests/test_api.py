@@ -2,11 +2,9 @@
 import pytest
 from aioresponses import aioresponses
 from custom_components.slovnaft.api import (
-    SlovnaftApiClient, 
-    SlovnaftConnectionError,
-    SlovnaftApiError
+    SlovnaftConnectionError
 )
-from custom_components.slovnaft.const import CALENDAR_ENDPOINT, ENV_ENDPOINT
+from custom_components.slovnaft.const import CALENDAR_ENDPOINT
 
 @pytest.mark.asyncio
 async def test_get_calendar_success(mock_api_client):

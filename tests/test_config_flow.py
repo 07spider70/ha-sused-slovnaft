@@ -25,8 +25,8 @@ async def test_successful_config_flow(hass):
     assert result["type"] == "form"
     assert result["errors"] == {}
 
-    with patch("custom_components.slovnaft.config_flow.SlovnaftApiClient.get_environment") as mock_env, \
-         patch("custom_components.slovnaft.config_flow.SlovnaftApiClient.get_calendar") as mock_cal, \
+    with patch("custom_components.slovnaft.config_flow.SlovnaftApiClient.get_environment"), \
+         patch("custom_components.slovnaft.config_flow.SlovnaftApiClient.get_calendar"), \
          patch.object(hass.config_entries, "async_setup", return_value=True) as mock_setup:
 
         result2 = await hass.config_entries.flow.async_configure(

@@ -79,8 +79,10 @@ class SlovnaftConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 session = async_get_clientsession(self.hass)
                 client = SlovnaftApiClient(session)
                 try:
-                    if user_input.get("enable_env"): await client.get_environment()
-                    if user_input.get("enable_calendar"): await client.get_calendar()
+                    if user_input.get("enable_env"):
+                        await client.get_environment()
+                    if user_input.get("enable_calendar"):
+                        await client.get_calendar()
                 except SlovnaftApiError:
                     _LOGGER.error("API connection failed during config flow: %s", user_input)
                     errors["base"] = "cannot_connect"

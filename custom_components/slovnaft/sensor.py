@@ -62,9 +62,11 @@ class SlovnaftAirQualitySensor(CoordinatorEntity, SensorEntity):
     @property
     def native_value(self) -> Optional[Any]:
         stations_data: Dict[str, StationAirQuality] = self.coordinator.data
-        if not stations_data: return None
+        if not stations_data:
+            return None
         station = stations_data.get(self.station_id)
-        if station: return getattr(station, self.sensor_key, None)
+        if station:
+            return getattr(station, self.sensor_key, None)
         return None
 
 
