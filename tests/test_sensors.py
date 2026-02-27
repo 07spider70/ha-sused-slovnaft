@@ -2,10 +2,11 @@
 import datetime
 import pytest
 from unittest.mock import patch, MagicMock
-
-from custom_components.slovnaft.models import CalendarDayStatus, CalendarData
+import homeassistant.util.dt as dt_util
+from custom_components.slovnaft.models import CalendarDayStatus, CalendarData, StationAirQuality
 from custom_components.slovnaft.binary_sensor import SlovnaftCalendarSensor
 from custom_components.slovnaft.calendar import SlovnaftCalendarEntity
+from custom_components.slovnaft.sensor import SlovnaftCalendarNoteSensor, SlovnaftAirQualitySensor
 
 def test_calendar_today_logic():
     """Verify that the sensor correctly identifies 'today' from the timestamp."""
@@ -103,3 +104,127 @@ async def test_calendar_midnight_redraw(hass):
         with patch.object(entity, "async_write_ha_state") as mock_write:
             update_callback(None)
             mock_write.assert_called_once()
+
+def test_calendar_today_logic_class():
+    """Verify the actual binary sensor class logic."""
+    # 1. Create a fake timezone-aware 'today' using dt_util
+    today_dt = dt_util.now().replace(hour=12, minute=0, second=0, microsecond=0)
+    today_ts = int(today_dt.timestamp())
+
+    # 2. Setup the mock data exactly as the coordinator would provide it
+    status = CalendarDayStatus(
+        date_timestamp=today_ts,
+        fire=True, smell=False, noise=False, water=False, smoke=False, work=False
+    )
+    mock_api_data = CalendarData(
+        days={today_ts: status},
+        last_month_note=None, this_month_note=None, next_month_note=None
+    )
+
+    # 3. Create a fake coordinator that holds our mock data
+    mock_coordinator = MagicMock()
+    mock_coordinator.data = mock_api_data
+
+    # 4. INSTANTIATE THE ACTUAL SENSOR
+    sensor = SlovnaftCalendarSensor(
+        coordinator=mock_coordinator,
+        sensor_key="fire",
+        sensor_info={"icon": "mdi:fire"}
+    )
+
+    # 5. TEST THE ACTUAL PROPERTY
+    assert sensor.is_on is True
+
+def test_calendar_notes_sensor_real():
+    """Test that the calendar note sensor exposes states and attributes correctly."""
+    mock_coordinator = MagicMock()
+
+    # Scenario 1: Notes exist
+    mock_coordinator.data = CalendarData(
+        days={},
+        last_month_note="<p>Old note</p>",
+        this_month_note="<p>Current note</p>",
+        next_month_note="<p>Future note</p>"
+    )
+
+    sensor = SlovnaftCalendarNoteSensor(coordinator=mock_coordinator)
+
+    # Check main state
+    assert sensor.native_value == "Available"
+
+    # Check extra attributes
+    attrs = sensor.extra_state_attributes
+    assert attrs["last_month_note"] == "<p>Old note</p>"
+    assert attrs["this_month_note"] == "<p>Current note</p>"
+    assert attrs["next_month_note"] == "<p>Future note</p>"
+
+    # Scenario 2: No notes exist
+    mock_coordinator.data.this_month_note = None
+    assert sensor.native_value == "No Notes"
+
+
+def test_air_quality_sensor_real():
+    """Test that the air quality sensor pulls the correct measurement."""
+    mock_coordinator = MagicMock()
+
+    # Setup mock data for two different stations
+    station_1 = StationAirQuality(
+        site_number="1", timestamp=1600000000, pm10=15.5, temp=22.0,
+        pm25=None, so2=None, no=None, no2=None, nox=None, o3=None,
+        co=None, ch4=None, nmhc=None, thc=None, c6h6=None, c7h8=None,
+        c8h0=None, c4h6=None, h2s=None, pres=None, humi=None, glrd=None,
+        filt=None, wind_direction_name=None, wind_speed=None, wind_degrees=None
+    )
+    station_2 = StationAirQuality(
+        site_number="2", timestamp=1600000000, pm10=45.0, temp=19.5,
+        pm25=None, so2=None, no=None, no2=None, nox=None, o3=None,
+        co=None, ch4=None, nmhc=None, thc=None, c6h6=None, c7h8=None,
+        c8h0=None, c4h6=None, h2s=None, pres=None, humi=None, glrd=None,
+        filt=None, wind_direction_name=None, wind_speed=None, wind_degrees=None
+    )
+
+    mock_coordinator.data = {"1": station_1, "2": station_2}
+
+    # Instantiate the sensor looking for 'pm10' at station '2'
+    sensor = SlovnaftAirQualitySensor(
+        coordinator=mock_coordinator,
+        station_id="2",
+        station_name="Podunajske Biskupice",
+        sensor_key="pm10",
+        sensor_info={"unit": "µg/m³", "icon": "mdi:smog", "device_class": "pm10"}
+    )
+
+    # Verify it pulls 45.0 (from station 2), not 15.5 (from station 1)
+    assert sensor.native_value == 45.0
+
+
+async def test_calendar_entity_get_events_real(hass):
+    """Test that the calendar entity generates the correct CalendarEvent objects."""
+    mock_coordinator = MagicMock()
+
+    # Create fixed dates for the test
+    start_date = dt_util.now()
+    event_dt = start_date + datetime.timedelta(days=2)
+    event_ts = int(event_dt.timestamp())
+
+    # Create a day with multiple active events (Flaring and Noise)
+    active_day = CalendarDayStatus(
+        date_timestamp=event_ts,
+        fire=True, smell=False, noise=True, water=False, smoke=False, work=False
+    )
+
+    mock_coordinator.data = CalendarData(
+        days={event_ts: active_day},
+        last_month_note=None, this_month_note=None, next_month_note=None
+    )
+
+    entity = SlovnaftCalendarEntity(coordinator=mock_coordinator)
+    entity.hass = hass
+
+    # Call the actual async_get_events method
+    end_date = start_date + datetime.timedelta(days=7)
+    events = await entity.async_get_events(hass, start_date, end_date)
+
+    assert len(events) == 1
+    assert events[0].summary == "Slovnaft: Flaring, Noise"
+    assert events[0].start == event_dt.date()

@@ -4,10 +4,10 @@ import html
 import asyncio
 import logging
 import socket
-from datetime import datetime
 from typing import Any, Dict, Optional
 
 import aiohttp
+import homeassistant.util.dt as dt_util
 
 from .const import CALENDAR_ENDPOINT, ENV_ENDPOINT
 from .models import CalendarDayStatus, StationAirQuality, CalendarData
@@ -45,7 +45,7 @@ class SlovnaftApiClient:
             raise SlovnaftApiError(f"Unexpected error from {url}: {err}") from err
 
     async def get_calendar(self) -> CalendarData:
-        now = datetime.now()
+        now = dt_util.now()
         _LOGGER.debug("Fetching calendar data for %d-%02d", now.year, now.month)
         url = f"{CALENDAR_ENDPOINT}/{now.year}-{now.month}"
         raw_data = await self._api_wrapper("GET", url, headers={"Accept": "application/json"})

@@ -1,11 +1,14 @@
 """Calendar platform for the Sused Slovnaft integration."""
 import datetime
-from typing import Any, Dict
+from typing import Any
+
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.helpers.event import async_track_time_change
+import homeassistant.util.dt as dt_util
 
 from . import SlovnaftConfigEntry
 from .const import DOMAIN
@@ -19,6 +22,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlovnaftConfigEntry, asy
     coordinator = entry.runtime_data.calendar_coordinator
     async_add_entities([SlovnaftCalendarEntity(coordinator)])
 
+
 class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
     """A calendar entity displaying Slovnaft planned events."""
     _attr_has_entity_name = True
@@ -28,7 +32,7 @@ class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
         """Initialize the calendar entity."""
         super().__init__(coordinator)
         self._attr_unique_id = f"{DOMAIN}_calendar_view"
-        self.translation_key = "calendar_view"  # THE TRANSLATION MAGIC KEY
+        self.translation_key = "calendar_view"
 
     async def async_added_to_hass(self) -> None:
         """Run when entity is added to Home Assistant."""
@@ -47,23 +51,26 @@ class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
         )
 
     @property
-    def device_info(self) -> Dict[str, Any]:
-        return {
-            "identifiers": {(DOMAIN, "calendar")},
-            "name": "Slovnaft Calendar Events",
-            "manufacturer": "Slovnaft",
-        }
+    def device_info(self) -> DeviceInfo:
+        return DeviceInfo(
+            identifiers={(DOMAIN, "calendar")},
+            name="Slovnaft Calendar Events",
+            manufacturer="Slovnaft",
+        )
 
     @property
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming calendar event."""
-        if not self.coordinator.data:
+        if not self.coordinator.data or not self.coordinator.data.days:
             return None
 
-        today = datetime.datetime.now().date()
+        # Use Home Assistant's timezone-aware util
+        today = dt_util.now().date()
         calendar_days = self.coordinator.data.days
+
         for timestamp in sorted(calendar_days.keys()):
-            dt = datetime.datetime.fromtimestamp(timestamp).date()
+            # Use local time for the timestamp based on HA config
+            dt = dt_util.as_local(datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)).date()
             if dt >= today:
                 status = calendar_days[timestamp]
                 event = self._generate_ha_event(dt, status)
@@ -73,12 +80,12 @@ class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
 
     async def async_get_events(self, hass: HomeAssistant, start_date: datetime.datetime, end_date: datetime.datetime) -> list[CalendarEvent]:
         """Return calendar events within a datetime range."""
-        if not self.coordinator.data:
+        if not self.coordinator.data or not self.coordinator.data.days:
             return []
 
         events = []
-        for timestamp, status in self.coordinator.data.items():
-            dt = datetime.datetime.fromtimestamp(timestamp).date()
+        for timestamp, status in self.coordinator.data.days.items():
+            dt = dt_util.as_local(datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)).date()
             if start_date.date() <= dt <= end_date.date():
                 event = self._generate_ha_event(dt, status)
                 if event:

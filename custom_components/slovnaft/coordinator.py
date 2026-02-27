@@ -9,7 +9,7 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .api import SlovnaftApiClient, SlovnaftApiError
 from .const import DOMAIN
-from .models import StationAirQuality, CalendarDayStatus
+from .models import StationAirQuality, CalendarData
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -31,7 +31,7 @@ class SlovnaftEnvUpdateCoordinator(DataUpdateCoordinator[Dict[str, StationAirQua
         except SlovnaftApiError as err:
             raise UpdateFailed(f"Environment API error: {err}") from err
 
-class SlovnaftCalendarUpdateCoordinator(DataUpdateCoordinator[Dict[int, CalendarDayStatus]]):
+class SlovnaftCalendarUpdateCoordinator(DataUpdateCoordinator[CalendarData]):
     def __init__(self, hass: HomeAssistant, client: SlovnaftApiClient, update_interval_seconds: int, entry: ConfigEntry) -> None:
         self.client = client
         super().__init__(
@@ -42,7 +42,7 @@ class SlovnaftCalendarUpdateCoordinator(DataUpdateCoordinator[Dict[int, Calendar
             config_entry=entry,
         )
 
-    async def _async_update_data(self) -> Dict[int, CalendarDayStatus]:
+    async def _async_update_data(self) -> CalendarData:
         try:
             _LOGGER.debug("Updating Calendar data")
             return await self.client.get_calendar()
