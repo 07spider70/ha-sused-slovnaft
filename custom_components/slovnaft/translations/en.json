@@ -69,5 +69,17 @@
     "calendar": {
       "calendar_view": { "name": "Slovnaft Event Plan" }
     }
+  },
+  "selector": {
+    "calendar_interval": {
+      "options": {
+        "12": "12 hours",
+        "24": "24 hours",
+        "48": "2 days",
+        "72": "3 days",
+        "168": "1 Week",
+        "336": "2 Weeks"
+      }
+    }
   }
 }

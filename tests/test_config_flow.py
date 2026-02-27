@@ -35,7 +35,7 @@ async def test_successful_config_flow(hass):
                 "enable_env": True,
                 "env_interval": 15,
                 "enable_calendar": True,
-                "calendar_interval": 24,
+                "calendar_interval": "24",
                 "stations": ["116"],
             },
         )
@@ -72,7 +72,7 @@ async def test_form_cannot_connect_error(hass):
     with patch("custom_components.slovnaft.config_flow.SlovnaftApiClient.get_environment", side_effect=SlovnaftApiError("API Down")):
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"enable_env": True, "env_interval": 15, "enable_calendar": False, "calendar_interval": 24, "stations": ["116"]},
+            {"enable_env": True, "env_interval": 15, "enable_calendar": False, "calendar_interval": "24", "stations": ["116"]},
         )
 
     assert result2["type"] == "form"
@@ -83,7 +83,7 @@ async def test_reconfigure_flow_success(hass):
     """Test that the reconfiguration flow updates the entry and reloads."""
     entry = MockConfigEntry(
         domain=DOMAIN, title="Sused Slovnaft",
-        data={"enable_env": True, "env_interval": 10, "enable_calendar": True, "calendar_interval": 12, "stations": ["116"]},
+        data={"enable_env": True, "env_interval": 10, "enable_calendar": True, "calendar_interval": "12", "stations": ["116"]},
     )
     entry.add_to_hass(hass)
 
@@ -97,7 +97,7 @@ async def test_reconfigure_flow_success(hass):
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            {"enable_env": True, "env_interval": 45, "enable_calendar": True, "calendar_interval": 12, "stations": ["116", "117"]},
+            {"enable_env": True, "env_interval": 45, "enable_calendar": True, "calendar_interval": "12", "stations": ["116", "117"]},
         )
         await hass.async_block_till_done()
 
