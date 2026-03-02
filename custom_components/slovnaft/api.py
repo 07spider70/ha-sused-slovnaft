@@ -65,11 +65,17 @@ class SlovnaftApiClient:
         try:
             parsed_days = {}
             for month_key in ["lastMonth", "thisMonth", "nextMonth"]:
-                for day_data in raw_data.get(month_key, []):
+                month_days = raw_data.get(month_key, [])
+                _LOGGER.debug(
+                    "Parsing %d day entries from '%s'",
+                    len(month_days),
+                    month_key,
+                )
+                for day_data in month_days:
                     attrs = day_data.get("attributes", {})
                     timestamp = int(day_data.get("date", 0))
                     is_edited = str(day_data.get("edited", "0")) == "1"
-                    parsed_days[timestamp] = CalendarDayStatus(
+                    day_status = CalendarDayStatus(
                         date_timestamp=timestamp,
                         fire=bool(attrs.get("fire", 0)),
                         smell=bool(attrs.get("smell", 0)),
@@ -79,6 +85,19 @@ class SlovnaftApiClient:
                         work=bool(attrs.get("work", 0)),
                         edited=is_edited,
                         note=_clean_html(day_data.get("note")) if day_data.get("note") else None,
+                    )
+                    parsed_days[timestamp] = day_status
+                    _LOGGER.debug(
+                        "  Day ts=%s date2=%s fire=%s smell=%s noise=%s water=%s smoke=%s work=%s edited=%s",
+                        timestamp,
+                        day_data.get("date2", "N/A"),
+                        day_status.fire,
+                        day_status.smell,
+                        day_status.noise,
+                        day_status.water,
+                        day_status.smoke,
+                        day_status.work,
+                        day_status.edited,
                     )
 
             def get_month_key(y: int, m: int) -> str:
@@ -95,7 +114,11 @@ class SlovnaftApiClient:
                 get_month_key(now.year, now.month + 1): _clean_html(raw_data.get("nextMonthNote")),
             }
 
-            _LOGGER.debug("Successfully parsed calendar data for %d days", len(parsed_days))
+            _LOGGER.debug(
+                "Successfully parsed calendar data: %d total days, notes for months: %s",
+                len(parsed_days),
+                [k for k, v in notes_by_month.items() if v],
+            )
             return CalendarData(
                 days=parsed_days,
                 notes_by_month=notes_by_month,

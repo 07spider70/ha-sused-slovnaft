@@ -1,5 +1,6 @@
 """Calendar platform for the Sused Slovnaft integration."""
 import datetime
+import logging
 from typing import Any
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -13,6 +14,8 @@ import homeassistant.util.dt as dt_util
 from . import SlovnaftConfigEntry
 from .const import DOMAIN
 from .models import CalendarDayStatus
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -62,17 +65,32 @@ class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming calendar event."""
         if not self.coordinator.data or not self.coordinator.data.days:
+            _LOGGER.debug("No calendar data available for calendar entity")
             return None
 
         today = dt_util.now().date()
         calendar_days = self.coordinator.data.days
 
+        _LOGGER.debug(
+            "Looking for next calendar event from %s (available days: %d)",
+            today,
+            len(calendar_days),
+        )
+
         for timestamp in sorted(calendar_days.keys()):
-            dt = dt_util.as_local(datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)).date()
-            if dt >= today:
+            # Use UTC date — see binary_sensor._get_today_status docstring.
+            day_date = datetime.datetime.fromtimestamp(
+                timestamp, tz=datetime.timezone.utc
+            ).date()
+            if day_date >= today:
                 status = calendar_days[timestamp]
-                event = self._generate_ha_event(dt, status)
+                event = self._generate_ha_event(day_date, status)
                 if event:
+                    _LOGGER.debug(
+                        "Next calendar event: %s on %s",
+                        event.summary,
+                        day_date,
+                    )
                     return event
         return None
 
@@ -83,11 +101,21 @@ class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
 
         events = []
         for timestamp, status in self.coordinator.data.days.items():
-            dt = dt_util.as_local(datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)).date()
-            if start_date.date() <= dt <= end_date.date():
-                event = self._generate_ha_event(dt, status)
+            # Use UTC date — see binary_sensor._get_today_status docstring.
+            day_date = datetime.datetime.fromtimestamp(
+                timestamp, tz=datetime.timezone.utc
+            ).date()
+            if start_date.date() <= day_date <= end_date.date():
+                event = self._generate_ha_event(day_date, status)
                 if event:
                     events.append(event)
+
+        _LOGGER.debug(
+            "Returning %d calendar events for range %s to %s",
+            len(events),
+            start_date.date(),
+            end_date.date(),
+        )
         return events
 
     @staticmethod
