@@ -27,7 +27,13 @@ class SlovnaftEnvUpdateCoordinator(DataUpdateCoordinator[Dict[str, StationAirQua
     async def _async_update_data(self) -> Dict[str, StationAirQuality]:
         try:
             _LOGGER.debug("Updating StationAirQuality data")
-            return await self.client.get_environment()
+            result = await self.client.get_environment()
+            _LOGGER.debug(
+                "Environment update complete: %d stations (%s)",
+                len(result),
+                ", ".join(result.keys()),
+            )
+            return result
         except SlovnaftApiError as err:
             raise UpdateFailed(f"Environment API error: {err}") from err
 
@@ -45,6 +51,12 @@ class SlovnaftCalendarUpdateCoordinator(DataUpdateCoordinator[CalendarData]):
     async def _async_update_data(self) -> CalendarData:
         try:
             _LOGGER.debug("Updating Calendar data")
-            return await self.client.get_calendar()
+            result = await self.client.get_calendar()
+            _LOGGER.debug(
+                "Calendar update complete: %d days, notes available for months: %s",
+                len(result.days),
+                [k for k, v in result.notes_by_month.items() if v],
+            )
+            return result
         except SlovnaftApiError as err:
             raise UpdateFailed(f"Calendar API error: {err}") from err

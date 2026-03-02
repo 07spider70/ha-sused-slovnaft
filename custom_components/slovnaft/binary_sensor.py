@@ -1,5 +1,6 @@
 """Binary sensor platform for the Sused Slovnaft Calendar."""
 import datetime
+import logging
 from typing import Any, Dict
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
@@ -13,6 +14,8 @@ import homeassistant.util.dt as dt_util
 from . import SlovnaftConfigEntry
 from .models import CalendarDayStatus
 from .const import DOMAIN, BINARY_SENSOR_TYPES
+
+_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 0
 
@@ -63,15 +66,49 @@ class SlovnaftCalendarSensor(CoordinatorEntity, BinarySensorEntity):
         )
 
     def _get_today_status(self) -> CalendarDayStatus | None:
-        """Helper method to get today's CalendarDayStatus."""
+        """Helper method to get today's CalendarDayStatus.
+
+        The API timestamps represent midnight local time (CET/CEST) stored as
+        UTC, so the *UTC date* of each timestamp equals the intended calendar
+        day.  We therefore compare UTC dates from the API against the user's
+        local date to find today's entry.
+        """
         if not self.coordinator.data or not self.coordinator.data.days:
+            _LOGGER.debug("No calendar data available for binary sensor %s", self.sensor_key)
             return None
 
         today = dt_util.now().date()
+        _LOGGER.debug(
+            "Looking up calendar status for sensor '%s' on local date %s (available days: %d)",
+            self.sensor_key,
+            today,
+            len(self.coordinator.data.days),
+        )
+
         for timestamp, day_status in self.coordinator.data.days.items():
-            dt = dt_util.as_local(datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)).date()
-            if dt == today:
+            # Use UTC date — the API encodes each calendar day at 23:00/22:00
+            # UTC (midnight CET/CEST), so the UTC date is the correct day.
+            day_date = datetime.datetime.fromtimestamp(
+                timestamp, tz=datetime.timezone.utc
+            ).date()
+            if day_date == today:
+                _LOGGER.debug(
+                    "Matched today (%s) to API timestamp %s (UTC %s) for sensor '%s': %s=%s",
+                    today,
+                    timestamp,
+                    day_date,
+                    self.sensor_key,
+                    self.sensor_key,
+                    getattr(day_status, self.sensor_key, None),
+                )
                 return day_status
+
+        _LOGGER.debug(
+            "No matching calendar entry found for today (%s) in %d available days for sensor '%s'",
+            today,
+            len(self.coordinator.data.days),
+            self.sensor_key,
+        )
         return None
 
     @property
