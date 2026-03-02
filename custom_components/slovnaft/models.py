@@ -12,6 +12,8 @@ class CalendarDayStatus:
     water: bool
     smoke: bool
     work: bool
+    edited: bool = False
+    note: Optional[str] = None
 
 @dataclass
 class CalendarData:

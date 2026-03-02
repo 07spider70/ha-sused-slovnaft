@@ -107,15 +107,22 @@ class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
         if status.work:
             active_flags.append("Maintenance")
 
-        if not active_flags:
+        if not active_flags and not status.note:
             return None
 
-        summary = f"Slovnaft: {', '.join(active_flags)}"
+        summary = f"Slovnaft: {', '.join(active_flags)}" if active_flags else "Slovnaft: Information"
+
+        description = "Official transparent refinery status."
+        if status.edited:
+            description += " (Edited)"
+        if status.note:
+            description += f"\n\nNote: {status.note}"
+
         end_date = event_date + datetime.timedelta(days=1)
 
         return CalendarEvent(
             start=event_date,
             end=end_date,
             summary=summary,
-            description="Official transparent refinery status.",
+            description=description,
         )
