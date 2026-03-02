@@ -1,6 +1,7 @@
 """Data models for the Sused Slovnaft integration."""
 from dataclasses import dataclass
 from typing import Optional, Dict
+import homeassistant.util.dt as dt_util
 
 @dataclass
 class CalendarDayStatus:
@@ -11,13 +12,37 @@ class CalendarDayStatus:
     water: bool
     smoke: bool
     work: bool
+    edited: bool = False
+    note: Optional[str] = None
 
 @dataclass
 class CalendarData:
     days: Dict[int, CalendarDayStatus]
-    last_month_note: Optional[str]
-    this_month_note: Optional[str]
-    next_month_note: Optional[str]
+    notes_by_month: Dict[str, Optional[str]]
+
+    def _get_note_for_offset(self, month_offset: int) -> Optional[str]:
+        """Helper to safely fetch a note offset from the real-time current month."""
+        now = dt_util.now()
+        y, m = now.year, now.month + month_offset
+        if m < 1:
+            y -= 1
+            m += 12
+        elif m > 12:
+            y += 1
+            m -= 12
+        return self.notes_by_month.get(f"{y}-{m:02d}")
+
+    @property
+    def last_month_note(self) -> Optional[str]:
+        return self._get_note_for_offset(-1)
+
+    @property
+    def this_month_note(self) -> Optional[str]:
+        return self._get_note_for_offset(0)
+
+    @property
+    def next_month_note(self) -> Optional[str]:
+        return self._get_note_for_offset(1)
 
 @dataclass
 class StationAirQuality:

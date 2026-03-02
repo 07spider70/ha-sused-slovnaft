@@ -11,6 +11,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt as dt_util
 
 from . import SlovnaftConfigEntry
+from .models import CalendarDayStatus
 from .const import DOMAIN, BINARY_SENSOR_TYPES
 
 PARALLEL_UPDATES = 0
@@ -61,14 +62,32 @@ class SlovnaftCalendarSensor(CoordinatorEntity, BinarySensorEntity):
             manufacturer="Slovnaft",
         )
 
-    @property
-    def is_on(self) -> bool:
+    def _get_today_status(self) -> CalendarDayStatus | None:
+        """Helper method to get today's CalendarDayStatus."""
         if not self.coordinator.data or not self.coordinator.data.days:
-            return False
+            return None
 
         today = dt_util.now().date()
         for timestamp, day_status in self.coordinator.data.days.items():
             dt = dt_util.as_local(datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)).date()
             if dt == today:
-                return getattr(day_status, self.sensor_key, False)
+                return day_status
+        return None
+
+    @property
+    def is_on(self) -> bool:
+        today_status = self._get_today_status()
+        if today_status:
+            return getattr(today_status, self.sensor_key, False)
         return False
+
+    @property
+    def extra_state_attributes(self) -> Dict[str, Any]:
+        """Expose unlimited length day notes and edited flags as attributes"""
+        today_status = self._get_today_status()
+        if today_status:
+            return {
+                "edited": today_status.edited,
+                "note": today_status.note,
+            }
+        return {}

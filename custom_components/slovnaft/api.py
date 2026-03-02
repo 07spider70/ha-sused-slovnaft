@@ -57,22 +57,18 @@ class SlovnaftApiClient:
             """Helper to strip HTML tags and unescape characters."""
             if not raw_html:
                 return None
-            # Replace breaks/paragraphs with newlines
             text = raw_html.replace("</p>", "\n").replace("<br>", "\n").replace("<br/>", "\n")
-            # Remove all remaining HTML tags
             text = re.sub('<.*?>', '', text)
-            # Unescape things like &nbsp; and &aacute;
             text = html.unescape(text)
-            # Remove empty lines
             return "\n".join([line.strip() for line in text.splitlines() if line.strip()])
 
         try:
             parsed_days = {}
-            # Loop through all three month arrays provided by the API
             for month_key in ["lastMonth", "thisMonth", "nextMonth"]:
                 for day_data in raw_data.get(month_key, []):
                     attrs = day_data.get("attributes", {})
                     timestamp = int(day_data.get("date", 0))
+                    is_edited = str(day_data.get("edited", "0")) == "1"
                     parsed_days[timestamp] = CalendarDayStatus(
                         date_timestamp=timestamp,
                         fire=bool(attrs.get("fire", 0)),
@@ -81,15 +77,28 @@ class SlovnaftApiClient:
                         water=bool(attrs.get("water", 0)),
                         smoke=bool(attrs.get("smoke", 0)),
                         work=bool(attrs.get("work", 0)),
+                        edited=is_edited,
+                        note=_clean_html(day_data.get("note")) if day_data.get("note") else None,
                     )
 
+            def get_month_key(y: int, m: int) -> str:
+                if m < 1:
+                    return f"{y - 1}-12"
+                elif m > 12:
+                    return f"{y + 1}-01"
+                return f"{y}-{m:02d}"
+
+            # Map the HTML text to absolute YYYY-MM strings
+            notes_by_month = {
+                get_month_key(now.year, now.month - 1): _clean_html(raw_data.get("lastMonthNote")),
+                get_month_key(now.year, now.month): _clean_html(raw_data.get("thisMonthNote")),
+                get_month_key(now.year, now.month + 1): _clean_html(raw_data.get("nextMonthNote")),
+            }
 
             _LOGGER.debug("Successfully parsed calendar data for %d days", len(parsed_days))
             return CalendarData(
                 days=parsed_days,
-                last_month_note=_clean_html(raw_data.get("lastMonthNote")),
-                this_month_note=_clean_html(raw_data.get("thisMonthNote")),
-                next_month_note=_clean_html(raw_data.get("nextMonthNote")),
+                notes_by_month=notes_by_month,
             )
         except (KeyError, TypeError, ValueError) as err:
             raise SlovnaftDataError(f"Failed to parse calendar data: {err}") from err
