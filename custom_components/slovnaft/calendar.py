@@ -64,12 +64,10 @@ class SlovnaftCalendarEntity(CoordinatorEntity, CalendarEntity):
         if not self.coordinator.data or not self.coordinator.data.days:
             return None
 
-        # Use Home Assistant's timezone-aware util
         today = dt_util.now().date()
         calendar_days = self.coordinator.data.days
 
         for timestamp in sorted(calendar_days.keys()):
-            # Use local time for the timestamp based on HA config
             dt = dt_util.as_local(datetime.datetime.fromtimestamp(timestamp, tz=datetime.timezone.utc)).date()
             if dt >= today:
                 status = calendar_days[timestamp]
