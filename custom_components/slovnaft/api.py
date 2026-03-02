@@ -68,6 +68,7 @@ class SlovnaftApiClient:
                 for day_data in raw_data.get(month_key, []):
                     attrs = day_data.get("attributes", {})
                     timestamp = int(day_data.get("date", 0))
+                    is_edited = str(day_data.get("edited", "0")) == "1"
                     parsed_days[timestamp] = CalendarDayStatus(
                         date_timestamp=timestamp,
                         fire=bool(attrs.get("fire", 0)),
@@ -76,6 +77,8 @@ class SlovnaftApiClient:
                         water=bool(attrs.get("water", 0)),
                         smoke=bool(attrs.get("smoke", 0)),
                         work=bool(attrs.get("work", 0)),
+                        edited=is_edited,
+                        note=_clean_html(day_data.get("note")) if day_data.get("note") else None,
                     )
 
             def get_month_key(y: int, m: int) -> str:
