@@ -7,6 +7,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 from custom_components.slovnaft import async_migrate_entry
 from custom_components.slovnaft import async_setup_entry, async_unload_entry
 from custom_components.slovnaft.const import DOMAIN
+from custom_components.slovnaft.models import CalendarData
 
 @pytest.mark.asyncio
 async def test_setup_unload_entry(hass, mock_config_entry):
@@ -16,7 +17,9 @@ async def test_setup_unload_entry(hass, mock_config_entry):
 
     mock_config_entry.mock_state(hass, ConfigEntryState.SETUP_IN_PROGRESS)
 
-    with patch("custom_components.slovnaft.api.SlovnaftApiClient.get_calendar", return_value={}), \
+    empty_calendar = CalendarData(days={}, notes_by_month={})
+
+    with patch("custom_components.slovnaft.api.SlovnaftApiClient.get_calendar", return_value=empty_calendar), \
          patch("custom_components.slovnaft.api.SlovnaftApiClient.get_environment", return_value={}), \
          patch.object(hass.config_entries, "async_forward_entry_setups") as mock_forward:
 
