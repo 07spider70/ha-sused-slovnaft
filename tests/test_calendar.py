@@ -1,9 +1,11 @@
-from datetime import datetime
+import datetime
+import homeassistant.util.dt as dt_util
 from custom_components.slovnaft.models import CalendarDayStatus
 
 def test_binary_sensor_today_logic():
-    """Verify logic that picks today's date from the dataset."""
-    today_ts = int(datetime.now().replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
+    """Verify logic that picks today's date from the dataset using proper HA dt_utils."""
+    now = dt_util.now()
+    today_ts = int(now.replace(hour=0, minute=0, second=0, microsecond=0).timestamp())
 
     # Mock data for today
     status_today = CalendarDayStatus(
@@ -17,7 +19,7 @@ def test_binary_sensor_today_logic():
     # Simulate the is_on logic
     found = False
     for ts, status in data.items():
-        if datetime.fromtimestamp(ts).date() == datetime.now().date():
+        if datetime.datetime.fromtimestamp(ts, tz=datetime.timezone.utc).date() == dt_util.now().date():
             assert status.fire is True
             found = True
 
